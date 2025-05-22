@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    
+    /* ==== BASIC STYLES ==== */
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #b80072, #00dbeb);
+      display: flex;
+      flex-direction:row;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      color: #fff;
+    }
+    
+  
+
+    /* ==== MAIN GAME BOARD ==== */
+    .main-board {
+      width: 500px;
+      height: 500px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 5px;
+      border: 4px solid #ff00cc;
+      box-shadow: 0 0 20px #ff00cc;
+      background-color: #111;
+      position: relative;
+    }
+
+    /* ==== EACH CELL ==== */
+    .cell {
+      background: #222;
+      border: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .cell:hover {
+      background: #333;
+    }
+    .X-icon{
+        font-size: 100px;
+        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: aqua;
+        text-shadow: 0 0 10px #fff, 0 0 10px #0ff, 0 0 30px #0ff;
+    }
+    .O_icon{
+        font-size: 100px;
+        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: #ff00cc;
+        text-shadow: 0 0 10px #fff, 0 0 10px #ff00cc, 0 0 30px #ff00cc;
+    } 
+    /* ==== ICONS FOR JS USE ==== */
+    
+#modal-overlay {
+            position: fixed; /* Fixed position relative to the viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0); /* semi-transparent black */ /* Semi-transparent black background */
+            display: flex; /* Use flexbox to center the modal box */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            z-index: 1000; /* Ensure it's on top of everything */
+            opacity: 0; /* Initially hidden */
+            visibility: hidden; /* Initially not visible to screen readers */
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; /* Smooth fade in/out */
+        }
+
+        /* Class to show the modal overlay */
+        #modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Winner Box: The actual content box inside the modal overlay */
+        #winner-box {
+            width: 600px;
+            height: 600px;
+            background-color: #000000; /* White background for the box */
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Soft shadow */
+            display: flex;
+            flex-direction: column; /* Stack content vertically */
+            align-items: center;
+            justify-content: center;
+            color: gold;
+            font-family:cursive;
+             text-shadow:0 0 30px gold; /* Dark text color */
+            font-size: 4rem; /* Large font size for "Winner X" */
+            font-weight: bold;
+            transform: scale(0.8); /* Start slightly smaller for a pop-in effect */
+            transition: transform 0.3s ease-in-out; /* Smooth scale transition */
+        }
+
+        /* When modal is shown, scale the box to normal size */
+        #modal-overlay.show #winner-box {
+            transform: scale(1);
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            #winner-box {
+                width: 90vw; /* Use viewport width for responsiveness */
+                height: 90vw; /* Keep it square */
+                max-width: 400px; /* Max width for tablets */
+                max-height: 400px; /* Max height for tablets */
+                font-size: 3rem; /* Adjust font size for smaller screens */
+            }
+        }
+
+
+
+
+        @media (max-width: 768px) {
+  body {
+    flex-direction: column;
+    padding: 10px;
+    height: auto;
+  }
+
+  .main-board {
+    width: 90vw;
+    height: 90vw;
+    max-width: 500px;
+    max-height: 700px;
+  }
+
+  .X-icon,
+  .O_icon {
+    font-size: 60px;
+  }
+
+  #winner-box {
+    width: 90vw;
+    height: 90vw;
+    max-width: 400px;
+    max-height: 400px;
+    font-size: 2.5rem;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="main-board">
+      <div class="cell" id="cell1"></div>
+      <div class="cell" id="cell2"></div>
+      <div class="cell" id="cell3"></div>
+      <div class="cell" id="cell4"></div>
+      <div class="cell" id="cell5"></div>
+      <div class="cell" id="cell6"></div>
+      <div class="cell" id="cell7"></div>
+      <div class="cell" id="cell8"></div>
+      <div class="cell" id="cell9"></div>
+  </div>
+<div id="modal-overlay">
+        <div id="winner-box">
+            <span></span>
+        </div>
+    </div>
+
+ 
+
+  <script >
+    let cells = document.querySelectorAll('.cell');
+let last_play = "O"
+const win_case = ["123", "456", "789", "147", "258", "369", "159", "357"]
+let O_playe = [];
+let X_playe = [];
+
+
+
+function WINNER(params) {
+    
+        const modalOverlay = document.getElementById('modal-overlay');
+        const winnerSpan = modalOverlay.getElementsByTagName('span')[0];
+        const body = document.body; // Reference to the body element
+
+        /**
+         * Function to open the modal.
+         * It adds a class to the body to apply blur and shows the modal overlay.
+         */
+        const openModal = () => {
+            modalOverlay.classList.add('show'); // Show the modal overlay
+        };
+
+        /**
+         * Function to close the modal.
+         * It removes the blur from the body and hides the modal overlay.
+         */
+        const closeModal = () => {
+            body.classList.remove('modal-active'); // Remove blur from the background
+            modalOverlay.classList.remove('show'); // Hide the modal overlay
+        };
+
+        // Open the modal automatically after 10 seconds (10000 milliseconds)
+        console.log(winnerSpan.innerText);
+        winnerSpan.innerText = `${params} is WINNER`;
+        setTimeout(openModal, 1000);
+        console.log(winnerSpan.innerText);
+
+       
+
+        // Close modal if clicked outside winner box
+        modalOverlay.addEventListener('click', (event) => {
+            if (event.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modalOverlay.classList.contains('show')) {
+                closeModal();
+            }
+        });
+    
+
+    
+}
+
+
+
+cells.forEach((cell) => {
+    cell.addEventListener("click", () => {
+        if (cell.innerText == '') {
+            if (last_play === "X") {
+                cell.innerText = "O";
+                cell.classList.add("O_icon")
+                last_play = "O"
+                if (O_playe.length > 0) {
+                    O_playe.push(O_playe.pop() + cell.id.slice(-1));
+                } else {
+                    O_playe.push(cell.id.slice(-1));
+                }
+            } else {
+                cell.innerText = "X";
+                cell.classList.add("X-icon")
+                last_play = "X";
+                if (X_playe.length > 0) {
+                    X_playe.push(X_playe.pop() + cell.id.slice(-1));
+                } else {
+                    X_playe.push(cell.id.slice(-1));
+                }
+            }
+        }
+        let strO = O_playe.at(0);
+        let strX = X_playe.at(0);
+        if (strO !== undefined && strX !== undefined && strO.length >= 2 && strX.length >= 2) {
+            for (i of win_case) {
+                if (strO.includes(i.at(0)) && strO.includes(i.at(1)) && strO.includes(i.at(2))) {
+                    WINNER("O")
+                    console.log(strO, "WINNER IS OOOOO ---------------");
+                }
+                if (strX.includes(i.at(0)) && strX.includes(i.at(1)) && strX.includes(i.at(2))) {
+                    WINNER("X")
+                    console.log(strX, "WINNER  IS XXXX ---------------");
+                }
+            }
+        }
+
+    });
+
+})
+
+  </script>
+</body>
+</html>
